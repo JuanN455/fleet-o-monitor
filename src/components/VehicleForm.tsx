@@ -6,6 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface Driver {
+  id: string;
+  name: string;
+  license: string;
+  phone: string;
+}
+
 interface VehicleFormProps {
   onSubmit: (vehicle: {
     brand: string;
@@ -13,16 +20,19 @@ interface VehicleFormProps {
     plate: string;
     vin: string;
     fuelType: string;
+    driverId?: string;
   }) => void;
+  drivers: Driver[];
 }
 
-const VehicleForm = ({ onSubmit }: VehicleFormProps) => {
+const VehicleForm = ({ onSubmit, drivers }: VehicleFormProps) => {
   const [formData, setFormData] = useState({
     brand: "",
     model: "",
     plate: "",
     vin: "",
     fuelType: "Gasoline",
+    driverId: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -34,6 +44,7 @@ const VehicleForm = ({ onSubmit }: VehicleFormProps) => {
       plate: "",
       vin: "",
       fuelType: "Gasoline",
+      driverId: "",
     });
   };
 
@@ -102,6 +113,26 @@ const VehicleForm = ({ onSubmit }: VehicleFormProps) => {
                 <SelectItem value="Diesel">Diesel</SelectItem>
                 <SelectItem value="Electric">Electric</SelectItem>
                 <SelectItem value="Hybrid">Hybrid</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="driver">Assign Driver</Label>
+            <Select
+              value={formData.driverId}
+              onValueChange={(value) =>
+                setFormData({ ...formData, driverId: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a driver" />
+              </SelectTrigger>
+              <SelectContent>
+                {drivers.map((driver) => (
+                  <SelectItem key={driver.id} value={driver.id}>
+                    {driver.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

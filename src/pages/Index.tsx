@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import VehicleCard from '@/components/VehicleCard';
 import VehicleForm from '@/components/VehicleForm';
 import DriverForm from '@/components/DriverForm';
+import DriversList from '@/components/DriversList';
 import AlertsList from '@/components/AlertsList';
 import Map from '@/components/Map';
 import { useToast } from "@/hooks/use-toast";
@@ -69,9 +69,25 @@ const mockAlerts = [
   },
 ];
 
+const mockDrivers = [
+  {
+    id: "1",
+    name: "John Doe",
+    license: "DL123456",
+    phone: "+1234567890"
+  },
+  {
+    id: "2",
+    name: "Jane Smith",
+    license: "DL789012",
+    phone: "+1987654321"
+  }
+];
+
 const Index = () => {
   const [vehicles, setVehicles] = useState(mockVehicles);
   const [alerts] = useState(mockAlerts);
+  const [drivers, setDrivers] = useState(mockDrivers);
   const { toast } = useToast();
 
   const handleVehicleToggle = (id: string, state: boolean) => {
@@ -97,6 +113,7 @@ const Index = () => {
       lastUpdate: new Date().toISOString(),
       latitude: 40.7128,
       longitude: -74.006,
+      driver: vehicleData.driverId ? drivers.find(d => d.id === vehicleData.driverId)?.name : undefined
     };
 
     setVehicles([...vehicles, newVehicle]);
@@ -107,6 +124,11 @@ const Index = () => {
   };
 
   const handleAddDriver = (driverData: any) => {
+    const newDriver = {
+      ...driverData,
+      id: `${drivers.length + 1}`,
+    };
+    setDrivers([...drivers, newDriver]);
     toast({
       title: "Driver Added",
       description: `${driverData.name} has been added as a driver.`,
@@ -126,7 +148,7 @@ const Index = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <VehicleForm onSubmit={handleAddVehicle} />
+              <VehicleForm onSubmit={handleAddVehicle} drivers={drivers} />
             </DialogContent>
           </Dialog>
 
@@ -150,15 +172,22 @@ const Index = () => {
           <AlertsList alerts={alerts} />
         </div>
         
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold mb-4">Vehicles</h2>
-          {vehicles.map((vehicle) => (
-            <VehicleCard
-              key={vehicle.id}
-              vehicle={vehicle}
-              onToggle={handleVehicleToggle}
-            />
-          ))}
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">Vehicles</h2>
+            {vehicles.map((vehicle) => (
+              <VehicleCard
+                key={vehicle.id}
+                vehicle={vehicle}
+                onToggle={handleVehicleToggle}
+              />
+            ))}
+          </div>
+          
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">Drivers</h2>
+            <DriversList drivers={drivers} />
+          </div>
         </div>
       </div>
     </div>
