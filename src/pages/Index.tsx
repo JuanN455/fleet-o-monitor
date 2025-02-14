@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Car, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useRef } from 'react';
 
 // Mock data - replace with actual API calls
 const mockVehicles = [
@@ -89,6 +90,7 @@ const Index = () => {
   const [alerts] = useState(mockAlerts);
   const [drivers, setDrivers] = useState(mockDrivers);
   const { toast } = useToast();
+  const mapRef = useRef<HTMLDivElement>(null);
 
   const handleVehicleToggle = (id: string, state: boolean) => {
     setVehicles((prev) =>
@@ -135,6 +137,13 @@ const Index = () => {
     });
   };
 
+  const handleVehicleFocus = (id: string) => {
+    const mapElement = mapRef.current?.querySelector('[class*="mapboxgl-map"]');
+    if (mapElement) {
+      (mapElement as any)?.focusVehicle?.(id);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 animate-fadeIn">
       <div className="flex items-center justify-between mb-8">
@@ -167,7 +176,7 @@ const Index = () => {
       </div>
       
       <div className="grid lg:grid-cols-[1fr,400px] gap-8">
-        <div className="space-y-8">
+        <div className="space-y-8" ref={mapRef}>
           <Map vehicles={vehicles} />
           <AlertsList alerts={alerts} />
         </div>
@@ -180,6 +189,7 @@ const Index = () => {
                 key={vehicle.id}
                 vehicle={vehicle}
                 onToggle={handleVehicleToggle}
+                onFocus={handleVehicleFocus}
               />
             ))}
           </div>

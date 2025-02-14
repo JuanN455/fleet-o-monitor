@@ -76,6 +76,26 @@ const Map = ({ vehicles }: MapProps) => {
     });
   }, [vehicles]);
 
+  // Add function to focus on a specific vehicle
+  const focusVehicle = (id: string) => {
+    const vehicle = vehicles.find(v => v.id === id);
+    if (vehicle && map.current) {
+      map.current.flyTo({
+        center: [vehicle.longitude, vehicle.latitude],
+        zoom: 15,
+        duration: 2000
+      });
+
+      // Trigger popup for the focused vehicle
+      markers.current[id]?.togglePopup();
+    }
+  };
+
+  // Expose focusVehicle method to parent components
+  if (map.current) {
+    (map.current as any).focusVehicle = focusVehicle;
+  }
+
   return (
     <div className="relative w-full h-[600px] rounded-lg overflow-hidden shadow-lg">
       <div ref={mapContainer} className="absolute inset-0" />

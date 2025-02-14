@@ -18,15 +18,19 @@ interface VehicleCardProps {
     driver?: string;
   };
   onToggle: (id: string, state: boolean) => void;
+  onFocus?: (id: string) => void;
 }
 
-const VehicleCard = ({ vehicle, onToggle }: VehicleCardProps) => {
+const VehicleCard = ({ vehicle, onToggle, onFocus }: VehicleCardProps) => {
   const isLowBattery = vehicle.batteryLevel < 20;
 
   return (
     <Card className="w-full transition-all duration-300 hover:shadow-lg animate-slideIn">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div>
+        <div 
+          className="cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => onFocus?.(vehicle.id)}
+        >
           <CardTitle className="text-xl font-bold">{vehicle.brand} {vehicle.model}</CardTitle>
           <CardDescription>{vehicle.plate}</CardDescription>
         </div>
