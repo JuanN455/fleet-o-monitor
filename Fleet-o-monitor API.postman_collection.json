@@ -1,0 +1,299 @@
+{
+	"info": {
+		"_postman_id": "2131c886-eaf0-4a49-8f78-c46db7b709ec",
+		"name": "Fleet-o-monitor API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29777682"
+	},
+	"item": [
+		{
+			"name": "local",
+			"item": [
+				{
+					"name": "Drivers",
+					"item": [
+						{
+							"name": "driver",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\": \"Carlos Pérez\",\r\n  \"licenseNumber\": \"ABC12345\",\r\n  \"phone\": \"+18095551234\",\r\n  \"email\": \"carlos.perez@example.com\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:5002/api/drivers",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"api",
+										"drivers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GetAll",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:5002/api/drivers",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"api",
+										"drivers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GetById",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:5002/api/drivers/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"api",
+										"drivers",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update driver",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"phone\": \"+18095556789\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:5002/api/drivers/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"api",
+										"drivers",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Vehicles",
+					"item": [
+						{
+							"name": "Vehicles",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\": \"Carlos Pérez\",\r\n  \"licenseNumber\": \"ABC12345\",\r\n  \"phone\": \"+18095551234\",\r\n  \"email\": \"carlos.perez@example.com\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:5002/api/vehicles",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"api",
+										"vehicles"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GetAll",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:5002/api/vehicles",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"api",
+										"vehicles"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GetById",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:5002/api/vehicles/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"api",
+										"vehicles",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update vehicle",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"available\": false\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:5002/api/vehicles/1",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"api",
+										"vehicles",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Rents",
+					"item": [
+						{
+							"name": "Get rents",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Get By Id",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Create Rent",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"driverId\": 1,\r\n  \"vehicleId\": 1,\r\n  \"expectedReturnAt\": \"2025-03-01\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:5002/api/rents",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "5002",
+									"path": [
+										"api",
+										"rents"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Return vehicle",
+							"request": {
+								"method": "PUT",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Cancel rent",
+							"request": {
+								"method": "PUT",
+								"header": []
+							},
+							"response": []
+						},
+						{
+							"name": "Get Rent By Driver",
+							"request": {
+								"method": "GET",
+								"header": []
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	]
+}
