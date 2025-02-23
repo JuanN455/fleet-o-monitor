@@ -117,7 +117,62 @@ const Index = () => {
   };
 
   return (
-    // ... keep existing code (JSX remains the same)
+    <div className="container mx-auto py-8 animate-fadeIn">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-4xl font-bold">Fleet Monitor</h1>
+        <div className="flex gap-4">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Car className="mr-2 h-4 w-4" />
+                Add Vehicle
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <VehicleForm onSubmit={handleAddVehicle} drivers={drivers} />
+            </DialogContent>
+          </Dialog>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Users className="mr-2 h-4 w-4" />
+                Add Driver
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DriverForm onSubmit={handleAddDriver} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+      
+      <div className="grid lg:grid-cols-[1fr,400px] gap-8">
+        <div className="space-y-8" ref={mapRef}>
+          <Map vehicles={vehicles} />
+          <AlertsList alerts={alerts} />
+        </div>
+        
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">Vehicles</h2>
+            {vehicles.map((vehicle) => (
+              <VehicleCard
+                key={vehicle.id}
+                vehicle={vehicle}
+                onToggle={handleVehicleToggle}
+                onFocus={handleVehicleFocus}
+              />
+            ))}
+          </div>
+          
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold">Drivers</h2>
+            <DriversList drivers={drivers} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
