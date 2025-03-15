@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,45 +6,60 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Driver {
-  id: string;
+  id: number;  
   name: string;
-  license: string;
+  licenseNumber: string;
   phone: string;
 }
 
 interface VehicleFormProps {
   onSubmit: (vehicle: {
-    brand: string;
+    make: string;       
     model: string;
     plate: string;
     vin: string;
     fuelType: string;
-    driverId?: string;
-  }) => void;
+    driverId: number;
+  }) => Promise<void>;
   drivers: Driver[];
 }
 
 const VehicleForm = ({ onSubmit, drivers }: VehicleFormProps) => {
   const [formData, setFormData] = useState({
-    brand: "",
+    make: "",        
     model: "",
     plate: "",
     vin: "",
     fuelType: "Gasoline",
-    driverId: "",
+    driverId: 0,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
-    setFormData({
-      brand: "",
-      model: "",
-      plate: "",
-      vin: "",
-      fuelType: "Gasoline",
-      driverId: "",
-    });
+    if (!formData.driverId) {
+      setError("You must assign a driver to the vehicle.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await onSubmit(formData);
+      setFormData({
+        make: "",
+        model: "",
+        plate: "",
+        vin: "",
+        fuelType: "Gasoline",
+        driverId: 0,
+      });
+    } catch (error) {
+      console.error("Error submitting vehicle:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,13 +70,11 @@ const VehicleForm = ({ onSubmit, drivers }: VehicleFormProps) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-2">
-            <Label htmlFor="brand">Brand</Label>
+            <Label htmlFor="make">Make</Label>
             <Input
-              id="brand"
-              value={formData.brand}
-              onChange={(e) =>
-                setFormData({ ...formData, brand: e.target.value })
-              }
+              id="make"
+              value={formData.make}
+              onChange={(e) => setFormData({ ...formData, make: e.target.value })}
               required
             />
           </div>
@@ -71,9 +83,7 @@ const VehicleForm = ({ onSubmit, drivers }: VehicleFormProps) => {
             <Input
               id="model"
               value={formData.model}
-              onChange={(e) =>
-                setFormData({ ...formData, model: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, model: e.target.value })}
               required
             />
           </div>
@@ -82,9 +92,7 @@ const VehicleForm = ({ onSubmit, drivers }: VehicleFormProps) => {
             <Input
               id="plate"
               value={formData.plate}
-              onChange={(e) =>
-                setFormData({ ...formData, plate: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, plate: e.target.value })}
               required
             />
           </div>
@@ -101,9 +109,7 @@ const VehicleForm = ({ onSubmit, drivers }: VehicleFormProps) => {
             <Label htmlFor="fuelType">Fuel Type</Label>
             <Select
               value={formData.fuelType}
-              onValueChange={(value) =>
-                setFormData({ ...formData, fuelType: value })
-              }
+              onValueChange={(value) => setFormData({ ...formData, fuelType: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select fuel type" />
@@ -119,25 +125,24 @@ const VehicleForm = ({ onSubmit, drivers }: VehicleFormProps) => {
           <div className="grid gap-2">
             <Label htmlFor="driver">Assign Driver</Label>
             <Select
-              value={formData.driverId}
-              onValueChange={(value) =>
-                setFormData({ ...formData, driverId: value })
-              }
+              value={String(formData.driverId)}
+              onValueChange={(value) => setFormData({ ...formData, driverId: Number(value) })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a driver" />
               </SelectTrigger>
               <SelectContent>
                 {drivers.map((driver) => (
-                  <SelectItem key={driver.id} value={driver.id}>
+                  <SelectItem key={driver.id} value={String(driver.id)}>
                     {driver.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
           </div>
-          <Button type="submit" className="w-full">
-            Add Vehicle
+          <Button type="submit" className="w-full" disabled={loading || !formData.driverId}>
+            {loading ? "Adding..." : "Add Vehicle"}
           </Button>
         </form>
       </CardContent>

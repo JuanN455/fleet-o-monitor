@@ -1,100 +1,130 @@
-
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { io, Socket } from "socket.io-client";
 
-interface MapProps {
-  vehicles: Array<{
-    id: string;
-    latitude: number;
-    longitude: number;
-    isOn: boolean;
-    plate: string;
-  }>;
+interface Vehicle {
+  id: string;
+  latitude: number;   // Aquí se almacenará la latitud real
+  longitude: number;  // y la longitud real
+  isOn: boolean;  
+  plate: string;
 }
 
-const Map = ({ vehicles }: MapProps) => {
+const Map = () => {
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
+  const socket = useRef<Socket | null>(null);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN'; // Replace with your token
-    
+    // Conectar a WebSocket
+    socket.current = io('https://8b6b-190-122-96-74.ngrok-free.app', {
+      transports: ["websocket"],
+    });
+
+    socket.current.on("connect", () => {
+      console.log('Conectado al WebSocket con ID', socket.current?.id);
+    });
+
+    socket.current.on("connect_error", (err) => {
+      console.error('Error en la conexión WebSocket:', err);
+    });
+
+    socket.current.on("location", (data) => {
+      console.log('Datos recibidos:', data);
+
+      // Si data no es un array, convertirlo en uno
+      const newVehicles = Array.isArray(data) ? data : [data];
+
+      setVehicles((prevVehicles) => {
+        return newVehicles.map((vehicle: any) => {
+          // Usar vehicle.vehicleId si existe, sino vehicle.id
+          const vid = vehicle.vehicleId ? String(vehicle.vehicleId) : vehicle.id;
+          // Como los datos están invertidos, intercambiamos los valores:
+          const actualLatitude = parseFloat(vehicle.latitude); // Lo que viene como "longitude" es la latitud real
+          const actualLongitude = parseFloat(vehicle.longitude);   // Lo que viene como "latitude" es la longitud real
+
+          if (isNaN(actualLatitude) || isNaN(actualLongitude)) {
+            console.error("Coordenadas inválidas recibidas:", vehicle);
+            return null;
+          }
+
+          const existingVehicle = prevVehicles.find((v) => v.id === vid);
+          return existingVehicle
+            ? { ...existingVehicle, latitude: actualLatitude, longitude: actualLongitude }
+            : { id: vid, latitude: actualLatitude, longitude: actualLongitude, isOn: true, plate: vehicle.id || 'Unknown' };
+        }).filter(Boolean); // Filtrar null
+      });
+    });
+
+    socket.current.on("disconnect", () => {
+      console.log("Desconectado del servidor de WebSockets");
+    });
+
+    // Configurar Mapbox
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2FtdWVsZXBsIiwiYSI6ImNtN2g2aXA3ajAxd3Mya29uN2hvZ3hhMGkifQ._7s-W5FFZ0ouX20vHZ-zHQ';
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [-74.006, 40.7128], // Default to NYC
-      zoom: 12
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [-69.9312, 18.4861], // [lng, lat]
+      zoom: 12,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     return () => {
-      map.current?.remove();
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+      if (socket.current) {
+        socket.current.disconnect();
+        socket.current = null;
+      }
     };
   }, []);
 
   useEffect(() => {
     if (!map.current) return;
 
-    // Update markers
     vehicles.forEach((vehicle) => {
       if (!markers.current[vehicle.id]) {
-        // Create marker element
+        if (isNaN(vehicle.latitude) || isNaN(vehicle.longitude)) {
+          console.error("Coordenadas inválidas en el vehículo:", vehicle);
+          return;
+        }
+
+        // Crear el marcador
         const el = document.createElement('div');
         el.className = 'w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center';
-        el.innerHTML = `<div class="w-4 h-4 rounded-full ${
-          vehicle.isOn ? 'bg-success' : 'bg-muted'
-        }"></div>`;
+        el.innerHTML = `<div class="w-4 h-4 rounded-full bg-success"></div>`;
 
-        // Create popup
+        // Crear popup
         const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-          `<strong>${vehicle.plate}</strong><br>
-           Status: ${vehicle.isOn ? 'Active' : 'Inactive'}`
+          `<strong>${vehicle.plate}</strong><br>Status: ${vehicle.isOn ? 'Active' : 'Inactive'}`
         );
 
-        // Create and store marker
         markers.current[vehicle.id] = new mapboxgl.Marker(el)
-          .setLngLat([vehicle.longitude, vehicle.latitude])
+          .setLngLat([vehicle.longitude, vehicle.latitude]) // [lng, lat] usando los valores ya corregidos
           .setPopup(popup)
           .addTo(map.current);
       } else {
-        // Update existing marker
         markers.current[vehicle.id].setLngLat([vehicle.longitude, vehicle.latitude]);
       }
     });
 
-    // Remove unused markers
+    // Eliminar marcadores que ya no están en el estado
     Object.keys(markers.current).forEach((id) => {
-      if (!vehicles.find((v) => v.id === id)) {
+      if (!vehicles.some((v) => v.id === id)) {
         markers.current[id].remove();
         delete markers.current[id];
       }
     });
   }, [vehicles]);
-
-  // Add function to focus on a specific vehicle
-  const focusVehicle = (id: string) => {
-    const vehicle = vehicles.find(v => v.id === id);
-    if (vehicle && map.current) {
-      map.current.flyTo({
-        center: [vehicle.longitude, vehicle.latitude],
-        zoom: 15,
-        duration: 2000
-      });
-
-      // Trigger popup for the focused vehicle
-      markers.current[id]?.togglePopup();
-    }
-  };
-
-  // Expose focusVehicle method to parent components
-  if (map.current) {
-    (map.current as any).focusVehicle = focusVehicle;
-  }
 
   return (
     <div className="relative w-full h-[600px] rounded-lg overflow-hidden shadow-lg">

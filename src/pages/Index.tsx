@@ -1,146 +1,185 @@
-import { useState } from 'react';
-import VehicleCard from '@/components/VehicleCard';
-import VehicleForm from '@/components/VehicleForm';
-import DriverForm from '@/components/DriverForm';
-import DriversList from '@/components/DriversList';
-import AlertsList from '@/components/AlertsList';
-import Map from '@/components/Map';
+import { useRef, useEffect } from "react";
+import VehicleCard from "@/components/VehicleCard";
+import VehicleForm from "@/components/VehicleForm";
+import DriverForm from "@/components/DriverForm";
+import DriversList from "@/components/DriversList";
+import AlertsList from "@/components/AlertsList";
+import Map from "@/components/Map";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Car, Users } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { useRef } from 'react';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import axios from "axios";
 
-// Mock data - replace with actual API calls
-const mockVehicles = [
-  {
-    id: "1",
-    brand: "Toyota",
-    model: "Camry",
-    plate: "ABC-123",
-    vin: "1HGCM82633A123456",
-    fuelType: "Gasoline",
-    isOn: true,
-    batteryLevel: 85,
-    lastUpdate: "2024-03-10T10:00:00",
-    driver: "John Doe",
-    latitude: 40.7128,
-    longitude: -74.006,
-  },
-  {
-    id: "2",
-    brand: "Ford",
-    model: "F-150",
-    plate: "XYZ-789",
-    vin: "1FTEW1E53NFC12345",
-    fuelType: "Diesel",
-    isOn: false,
-    batteryLevel: 15,
-    lastUpdate: "2024-03-10T09:45:00",
-    driver: "Jane Smith",
-    latitude: 40.7148,
-    longitude: -74.008,
-  },
-];
+// Importando los hooks para obtener datos reales
+import { useVehicles } from "@/hooks/useVehicles";
+import { useDrivers } from "@/hooks/useDrivers";
+import { useAlerts } from "@/hooks/useAlerts";
 
-const mockAlerts = [
-  {
-    id: "1",
-    type: "battery" as const,
-    message: "Low GPS battery level detected",
-    timestamp: new Date().toISOString(),
-    vehiclePlate: "XYZ-789",
-    severity: "high" as const,
-  },
-  {
-    id: "2",
-    type: "speed" as const,
-    message: "Speed limit exceeded",
-    timestamp: new Date(Date.now() - 300000).toISOString(),
-    vehiclePlate: "ABC-123",
-    severity: "medium" as const,
-  },
-  {
-    id: "3",
-    type: "connection" as const,
-    message: "Device connection lost",
-    timestamp: new Date(Date.now() - 900000).toISOString(),
-    vehiclePlate: "XYZ-789",
-    severity: "high" as const,
-  },
-];
-
-const mockDrivers = [
-  {
-    id: "1",
-    name: "John Doe",
-    license: "DL123456",
-    phone: "+1234567890"
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    license: "DL789012",
-    phone: "+1987654321"
-  }
-];
+const API_DRIVERS = "https://9222-186-6-41-143.ngrok-free.app/api/drivers";
+const API_VEHICLES = "https://9222-186-6-41-143.ngrok-free.app/api/vehicles";
+const API_RENTS = "https://9222-186-6-41-143.ngrok-free.app/api/rents";
+const API_GPS = "https://9222-186-6-41-143.ngrok-free.app/api/gps";
 
 const Index = () => {
-  const [vehicles, setVehicles] = useState(mockVehicles);
-  const [alerts] = useState(mockAlerts);
-  const [drivers, setDrivers] = useState(mockDrivers);
+  const { vehicles, setVehicles, isLoading: loadingVehicles } = useVehicles();
+  const { drivers, addDriver, isLoading: loadingDrivers, error: driverError } = useDrivers();
+  const { alerts, isLoading: loadingAlerts } = useAlerts();
   const { toast } = useToast();
   const mapRef = useRef<HTMLDivElement>(null);
 
-  const handleVehicleToggle = (id: string, state: boolean) => {
-    setVehicles((prev) =>
-      prev.map((vehicle) =>
-        vehicle.id === id ? { ...vehicle, isOn: state } : vehicle
-      )
-    );
+  useEffect(() => {
+    console.log("Drivers actualizados:", drivers);
+  }, [drivers]);
 
-    toast({
-      title: `Vehicle ${state ? 'Started' : 'Stopped'}`,
-      description: `Vehicle ${vehicles.find(v => v.id === id)?.plate} has been ${state ? 'started' : 'stopped'}.`,
-      variant: state ? 'default' : 'destructive',
-    });
+  // Función para agregar un nuevo conductor
+  const handleAddDriver = async (driverData: {
+    name: string;
+    licenseNumber: string;
+    phone: string;
+    email: string;
+  }) => {
+    try {
+      console.log("Enviando nuevo driver:", JSON.stringify(driverData, null, 2));
+      const response = await axios.post(API_DRIVERS, driverData, {
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      console.log("Nuevo Driver Agregado:", response.data);
+      addDriver(response.data);
+      toast({
+        title: "Driver Added",
+        description: `${response.data.name} added successfully.`,
+      });
+    } catch (error: any) {
+      console.error("Error adding driver:", error);
+      if (error.response) {
+        console.error("API error details:", error.response.data);
+        alert(`Error en la API: ${JSON.stringify(error.response.data)}`);
+      } else {
+        alert("No se pudo conectar con la API.");
+      }
+      toast({
+        title: "Error",
+        description: `Failed to add driver: ${error.message}`,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAddVehicle = (vehicleData: any) => {
-    const newVehicle = {
-      ...vehicleData,
-      id: `${vehicles.length + 1}`,
-      isOn: false,
-      batteryLevel: 100,
-      lastUpdate: new Date().toISOString(),
-      latitude: 40.7128,
-      longitude: -74.006,
-      driver: vehicleData.driverId ? drivers.find(d => d.id === vehicleData.driverId)?.name : undefined
-    };
+  // Función para agregar un nuevo vehículo y crear la renta asociada
+  const handleAddVehicle = async (vehicleData: {
+    make: string;
+    model: string;
+    plate: string;
+    vin: string;
+    fuelType: string;
+    driverId: number;
+  }) => {
+    try {
+      console.log("Enviando nuevo vehículo:", JSON.stringify(vehicleData, null, 2));
+      const payload = {
+        make: vehicleData.make,
+        model: vehicleData.model,
+        plate: vehicleData.plate,
+        vin: vehicleData.vin,
+        fuelType: vehicleData.fuelType,
+        driverId: String(vehicleData.driverId),
+        isOn: false,
+        batteryLevel: 100,
+        lastUpdate: new Date().toISOString(),
+      };
 
-    setVehicles([...vehicles, newVehicle]);
-    toast({
-      title: "Vehicle Added",
-      description: `${vehicleData.brand} ${vehicleData.model} has been added to the fleet.`,
-    });
+      const response = await fetch(API_VEHICLES, {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      if (!response.ok) {
+        const responseText = await response.text();
+        throw new Error(`Failed to add vehicle: ${response.status} ${response.statusText} - ${responseText}`);
+      }
+      const newVehicle = await response.json();
+      console.log("Nuevo Vehículo Agregado:", newVehicle);
+      setVehicles((prevVehicles) => [...prevVehicles, newVehicle]);
+      toast({
+        title: "Vehicle Added",
+        description: `${newVehicle.make} ${newVehicle.model} added to the fleet.`,
+      });
+
+      // Crear la renta asociada al vehículo
+      const rentPayload = {
+        driverId: vehicleData.driverId,
+        vehicleId: newVehicle.id,
+        expectedReturnAt: "2025-03-01",
+      };
+
+      const rentResponse = await fetch(API_RENTS, {
+        method: "POST",
+        body: JSON.stringify(rentPayload),
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      if (!rentResponse.ok) {
+        const rentResponseText = await rentResponse.text();
+        throw new Error(`Failed to create rent: ${rentResponse.status} ${rentResponse.statusText} - ${rentResponseText}`);
+      }
+      const newRent = await rentResponse.json();
+      console.log("Nueva Renta Creada:", newRent);
+      toast({
+        title: "Rent Created",
+        description: `Rent created successfully for vehicle ${newVehicle.make} ${newVehicle.model}.`,
+      });
+    } catch (error: any) {
+      console.error("Error adding vehicle:", error);
+      toast({
+        title: "Error",
+        description: `Failed to add vehicle: ${error.message}`,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAddDriver = (driverData: any) => {
-    const newDriver = {
-      ...driverData,
-      id: `${drivers.length + 1}`,
-    };
-    setDrivers([...drivers, newDriver]);
-    toast({
-      title: "Driver Added",
-      description: `${driverData.name} has been added as a driver.`,
-    });
-  };
-
-  const handleVehicleFocus = (id: string) => {
-    const mapElement = mapRef.current?.querySelector('[class*="mapboxgl-map"]');
-    if (mapElement) {
-      (mapElement as any)?.focusVehicle?.(id);
+  // Función para togglear el estado "isOn" del vehículo
+  const handleVehicleToggle = async (id: string, state: boolean) => {
+    try {
+      console.log("Toggle vehicle:", id, state);
+      const endpoint = `${API_GPS}/vehicle/${id}/${state ? "block" : "unblock"}`;
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      if (!response.ok) {
+        const responseText = await response.text();
+        throw new Error(`Failed to toggle vehicle: ${response.status} ${response.statusText} - ${responseText}`);
+      }
+      setVehicles((prevVehicles) =>
+        prevVehicles.map((vehicle) =>
+          vehicle.id === id ? { ...vehicle, isOn: state } : vehicle
+        )
+      );
+      toast({
+        title: `Vehicle ${state ? "Started" : "Stopped"}`,
+        description: `Vehicle has been ${state ? "started" : "stopped"}.`,
+        variant: state ? "default" : "destructive",
+      });
+    } catch (error: any) {
+      console.error("Error toggling vehicle:", error);
+      toast({
+        title: "Error",
+        description: `Failed to update vehicle status: ${error.message}`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -157,6 +196,7 @@ const Index = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
+              <DialogTitle>Add New Vehicle</DialogTitle>
               <VehicleForm onSubmit={handleAddVehicle} drivers={drivers} />
             </DialogContent>
           </Dialog>
@@ -169,34 +209,55 @@ const Index = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
+              <DialogTitle>Add New Driver</DialogTitle>
               <DriverForm onSubmit={handleAddDriver} />
             </DialogContent>
           </Dialog>
         </div>
       </div>
-      
+
       <div className="grid lg:grid-cols-[1fr,400px] gap-8">
         <div className="space-y-8" ref={mapRef}>
-          <Map vehicles={vehicles} />
-          <AlertsList alerts={alerts} />
+          <Map />
+          <AlertsList
+            alerts={alerts.map((alert) => ({
+              ...alert,
+              type: alert.type || "battery",
+              timestamp: alert.timestamp || new Date().toISOString(),
+            }))}
+          />
         </div>
-        
+
         <div className="space-y-8">
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold">Vehicles</h2>
-            {vehicles.map((vehicle) => (
-              <VehicleCard
-                key={vehicle.id}
-                vehicle={vehicle}
-                onToggle={handleVehicleToggle}
-                onFocus={handleVehicleFocus}
-              />
-            ))}
+            {loadingVehicles ? (
+              <p>Loading vehicles...</p>
+            ) : (
+              vehicles.map((vehicle) => {
+                const driverName =
+                  drivers.find((driver) => driver.id === vehicle.driverId)?.name || "";
+                return (
+                  <VehicleCard
+                    key={vehicle.id}
+                    vehicle={vehicle}
+                    driverName={driverName}
+                    onToggle={handleVehicleToggle}
+                  />
+                );
+              })
+            )}
           </div>
-          
+
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold">Drivers</h2>
-            <DriversList drivers={drivers} />
+            {loadingDrivers ? (
+              <p>Loading drivers...</p>
+            ) : driverError ? (
+              <p className="text-red-500">{driverError}</p>
+            ) : (
+              <DriversList drivers={drivers} />
+            )}
           </div>
         </div>
       </div>

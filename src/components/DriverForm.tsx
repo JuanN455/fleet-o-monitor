@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,25 +7,42 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 interface DriverFormProps {
   onSubmit: (driver: {
     name: string;
-    license: string;
+    licenseNumber: string;
     phone: string;
+    email: string;
   }) => void;
 }
 
 const DriverForm = ({ onSubmit }: DriverFormProps) => {
   const [formData, setFormData] = useState({
     name: "",
-    license: "",
+    licenseNumber: "",
     phone: "",
+    email: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 🔹 Verifica si algún campo está vacío
+    if (!formData.name || !formData.licenseNumber || !formData.phone || !formData.email) {
+      console.error("❌ Error: Todos los campos son obligatorios");
+      alert("Todos los campos son obligatorios.");
+      return;
+    }
+
+    console.log("📤 Enviando desde DriverForm:", formData); // 🔹 Verificar datos antes de enviarlos
+
     onSubmit(formData);
+
+    console.log("✅ Datos enviados correctamente desde DriverForm");
+
+    // 🔹 Se resetea el formulario solo si se envía correctamente
     setFormData({
       name: "",
-      license: "",
+      licenseNumber: "",
       phone: "",
+      email: "",
     });
   };
 
@@ -42,20 +58,16 @@ const DriverForm = ({ onSubmit }: DriverFormProps) => {
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="license">License Number</Label>
+            <Label htmlFor="licenseNumber">License Number</Label>
             <Input
-              id="license"
-              value={formData.license}
-              onChange={(e) =>
-                setFormData({ ...formData, license: e.target.value })
-              }
+              id="licenseNumber"
+              value={formData.licenseNumber}
+              onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
               required
             />
           </div>
@@ -65,9 +77,17 @@ const DriverForm = ({ onSubmit }: DriverFormProps) => {
               id="phone"
               type="tel"
               value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              required
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
             />
           </div>

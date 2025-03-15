@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -7,7 +6,7 @@ import { Power, AlertTriangle, Battery } from "lucide-react";
 interface VehicleCardProps {
   vehicle: {
     id: string;
-    brand: string;
+    make: string;
     model: string;
     plate: string;
     vin: string;
@@ -15,13 +14,13 @@ interface VehicleCardProps {
     isOn: boolean;
     batteryLevel: number;
     lastUpdate: string;
-    driver?: string;
   };
+  driverName?: string;
   onToggle: (id: string, state: boolean) => void;
   onFocus?: (id: string) => void;
 }
 
-const VehicleCard = ({ vehicle, onToggle, onFocus }: VehicleCardProps) => {
+const VehicleCard = ({ vehicle, driverName, onToggle, onFocus }: VehicleCardProps) => {
   const isLowBattery = vehicle.batteryLevel < 20;
 
   return (
@@ -31,7 +30,7 @@ const VehicleCard = ({ vehicle, onToggle, onFocus }: VehicleCardProps) => {
           className="cursor-pointer hover:opacity-80 transition-opacity"
           onClick={() => onFocus?.(vehicle.id)}
         >
-          <CardTitle className="text-xl font-bold">{vehicle.brand} {vehicle.model}</CardTitle>
+          <CardTitle className="text-xl font-bold">{vehicle.make} {vehicle.model}</CardTitle>
           <CardDescription>{vehicle.plate}</CardDescription>
         </div>
         <Switch
@@ -50,10 +49,10 @@ const VehicleCard = ({ vehicle, onToggle, onFocus }: VehicleCardProps) => {
             <span className="text-sm text-muted-foreground">Fuel Type:</span>
             <Badge variant="secondary">{vehicle.fuelType}</Badge>
           </div>
-          {vehicle.driver && (
+          {driverName && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Driver:</span>
-              <span className="font-medium">{vehicle.driver}</span>
+              <span className="font-medium">{driverName}</span>
             </div>
           )}
           <div className="flex items-center justify-between mt-2">

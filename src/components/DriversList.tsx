@@ -12,9 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Driver {
-  id: string;
+  id: number;  
   name: string;
-  license: string;
+  licenseNumber: string;
   phone: string;
 }
 
@@ -43,7 +43,7 @@ const DriversList = ({ drivers }: DriversListProps) => {
               {drivers.map((driver) => (
                 <TableRow key={driver.id}>
                   <TableCell className="font-medium">{driver.name}</TableCell>
-                  <TableCell>{driver.license}</TableCell>
+                  <TableCell>{driver.licenseNumber}</TableCell>
                   <TableCell>{driver.phone}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">Active</Badge>
