@@ -1,4 +1,4 @@
-# Welcome GPS
+#GPS
 
 ## Project info
 
